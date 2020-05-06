@@ -13,5 +13,5 @@ uniform float uvCoordinatesAdd;
 
 void main(void)
 {
-    fragColor = mix(texture(tex, vUvCoordinates + uvCoordinatesAdd), vec4(vColor, uAlpha), 0.5);
+    fragColor = texture(tex, vUvCoordinates + uvCoordinatesAdd);
 }

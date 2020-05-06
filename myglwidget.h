@@ -10,6 +10,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
+#include <QOpenGLDebugLogger>
 
 
 class MyGLWidget: public QOpenGLWidget, private QOpenGLFunctions_3_3_Core {
@@ -79,13 +80,13 @@ private:
             .texCoordinates = {1, 0}
         }
     };
-    int m_verticesSize = 4;
-    GLuint m_indices[6] = { 0, 1, 2, 1, 2, 3 };
-    int m_indicesSize = 6;
-    QOpenGLBuffer m_vbo{QOpenGLBuffer::VertexBuffer};
-    QOpenGLBuffer m_ibo{QOpenGLBuffer::IndexBuffer};
+    GLushort m_indices[6] = { 0, 1, 2, 1, 2, 3 };
+    QOpenGLBuffer* m_vbo;//{QOpenGLBuffer::VertexBuffer};
+    QOpenGLBuffer* m_ibo;//{QOpenGLBuffer::IndexBuffer};
     QOpenGLVertexArrayObject m_vao;
     QOpenGLShaderProgram* m_prog;
+    QOpenGLShaderProgram* m_progColor;
+    QOpenGLDebugLogger* logger;
     float m_transparency = 1.0f;
     float m_uvCoordinatesAdd = 0.0f;
     QOpenGLTexture* m_texture;

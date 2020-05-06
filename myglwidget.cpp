@@ -2,20 +2,27 @@
 #include <QtDebug>
 #include <QKeyEvent>
 #include <QOpenGLTexture>
+#include <QOpenGLDebugLogger>
 
 MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent) {
     setFocusPolicy(Qt::StrongFocus);
 }
 
 MyGLWidget::~MyGLWidget() {
-    //Make Current to enable for cleanup
+    // Make Current to enable for cleanup
     makeCurrent();
 
     // Deletion
     this->m_vao.destroy();
-    this->m_ibo.destroy();
-    this->m_vbo.destroy();
+    this->m_ibo->destroy();
+    this->m_vbo->destroy();
     this->m_texture->destroy();
+
+    delete this->m_ibo;
+    delete this->m_vbo;
+    delete this->m_texture;
+    delete this->m_prog;
+    delete this->logger;
 
     doneCurrent();
 }
@@ -42,13 +49,19 @@ void MyGLWidget::keyPressEvent( QKeyEvent * event ) {
 }
 
 void MyGLWidget::initializeGL() {
-    //Lade OpenGL funktionen vom Treiber
+    // Lade OpenGL funktionen vom Treiber
     Q_ASSERT(initializeOpenGLFunctions());
+
+    // Debugging aktivieren
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    Q_ASSERT(ctx->hasExtension(QByteArrayLiteral("GL_KHR_debug")));
+    this->logger = new QOpenGLDebugLogger(this);
+    logger->initialize();
 
     glEnable ( GL_BLEND );
     glBlendFunc ( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
 
-    //clear color einstellen: dunkelgrau
+    // clear color einstellen: dunkelgrau
     glClearColor(0.4, 0.4, 0.4, 1.0);
 
     QImage texImg;
@@ -58,60 +71,98 @@ void MyGLWidget::initializeGL() {
     Q_ASSERT(this->m_texture->isCreated());
     this->m_texture->setWrapMode(QOpenGLTexture::WrapMode::ClampToEdge);
 
+    //####################################################
+    // Shader
+    //####################################################
+
     this->m_prog = new QOpenGLShaderProgram{};
     Q_ASSERT(this->m_prog->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/sample.vert"));
-    Q_ASSERT(this->m_prog->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/sample.frag"));
+    Q_ASSERT(this->m_prog->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/texture.frag"));
     Q_ASSERT(this->m_prog->link());
-    this->m_prog->bind();
+
+    this->m_progColor = new QOpenGLShaderProgram{};
+    Q_ASSERT(this->m_progColor->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/sample.vert"));
+    Q_ASSERT(this->m_progColor->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/color.frag"));
+    Q_ASSERT(this->m_progColor->link());
+
+    //######################################################
+    // Buffer
+    //######################################################
+
+    this->m_ibo = new QOpenGLBuffer{QOpenGLBuffer::Type::IndexBuffer};
+    this->m_ibo->create();
+    Q_ASSERT(this->m_ibo->bind());
+    this->m_ibo->allocate(this->m_indices, sizeof(this->m_indices));
+    this->m_ibo->release();
+
+    this->m_vbo = new QOpenGLBuffer{QOpenGLBuffer::Type::VertexBuffer};
+    this->m_vbo->create();
+    Q_ASSERT(this->m_vbo->bind());
+    this->m_vbo->allocate(this->m_vertices, sizeof(this->m_vertices));
+    this->m_vbo->release();
 
     Q_ASSERT(this->m_vao.create());
     // Folgende Modifikationen wie vbo werden in vao gespeichert
     this->m_vao.bind();
+        this->m_vbo->bind();
+        this->m_ibo->bind();
 
-    this->m_ibo.create();
-    Q_ASSERT(this->m_ibo.bind());
-    this->m_ibo.allocate(this->m_indices, this->m_indicesSize * sizeof(GLuint));
+        int stride = 8 * sizeof(GLfloat);
 
-    this->m_vbo.create();
-    //Bind to current context
-    Q_ASSERT(this->m_vbo.bind());
-    this->m_vbo.allocate(this->m_vertices, this->m_verticesSize * sizeof(Vertex));
+        // vao muss gebindet sein, damit shader auf vbo zugreifen kann
+        this->m_prog->bind();
+            this->m_prog->enableAttributeArray(0);
+            this->m_prog->setAttributeBuffer(0, GL_FLOAT, 0, 3, stride);
+            this->m_prog->enableAttributeArray(1);
+            this->m_prog->setAttributeBuffer(1, GL_FLOAT, 3 * sizeof(GLfloat), 3, stride);
+            this->m_prog->enableAttributeArray(2);
+            this->m_prog->setAttributeBuffer(2, GL_FLOAT, 6 * sizeof(GLfloat), 2, stride);
+            //this->m_prog->setUniformValue("tex", 0);
 
-    int stride = 8 * sizeof(GLfloat);
-
-    this->m_prog->enableAttributeArray(0);
-    this->m_prog->setAttributeBuffer(0, GL_FLOAT, 0, 3, stride);
-    this->m_prog->enableAttributeArray(1);
-    this->m_prog->setAttributeBuffer(1, GL_FLOAT, 3 * sizeof(GLfloat), 3, stride);
-    this->m_prog->enableAttributeArray(2);
-    this->m_prog->setAttributeBuffer(2, GL_FLOAT, 6 * sizeof(GLfloat), 2, stride);
-    this->m_prog->setUniformValue("tex", 0);
-
-    this->m_vbo.release();
-    this->m_ibo.release();
+        this->m_progColor->bind();
+            this->m_progColor->enableAttributeArray(0);
+            this->m_progColor->setAttributeBuffer(0, GL_FLOAT, 0, 3, stride);
+            this->m_progColor->enableAttributeArray(1);
+            this->m_progColor->setAttributeBuffer(1, GL_FLOAT, 3 * sizeof(GLfloat), 3, stride);
+            this->m_progColor->enableAttributeArray(2);
+            this->m_progColor->setAttributeBuffer(2, GL_FLOAT, 6 * sizeof(GLfloat), 2, stride);
+            //this->m_progColor->setUniformValue("tex", 0);
     this->m_vao.release();
+    this->m_vbo->release();
+    this->m_ibo->release();
     this->m_prog->release();
-
+    this->m_progColor->release();
 }
 
 void MyGLWidget::paintGL() {
-    //Render in clear color
+    // Render in clear color
     glClear(GL_COLOR_BUFFER_BIT);
-    glBindVertexArray(this->m_vao.objectId());
+    //glBindVertexArray(this->m_vao.objectId());
     this->m_prog->bind();
     {
-        this->m_prog->setUniformValue("uAlpha", this->m_transparency);
         this->m_prog->setUniformValue("uvCoordinatesAdd", this->m_uvCoordinatesAdd);
         this->m_texture->bind();
         this->m_vao.bind();
-
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, nullptr);
         this->m_vao.release();
         this->m_texture->release();
     }
     this->m_prog->release();
+
+    this->m_progColor->bind();
+    {
+        this->m_progColor->setUniformValue("uAlpha", this->m_transparency);
+        this->m_vao.bind();
+        void* const offset = reinterpret_cast<void* const>(sizeof( GLushort )*3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, offset);
+        this->m_vao.release();
+    }
+    this->m_progColor->release();
+
+    // Read the internal OpenGL Debug Log
+    const QList<QOpenGLDebugMessage> messages = this->logger->loggedMessages();
+        for (const QOpenGLDebugMessage &message : messages)
+            qDebug() << message;
 
     update();
 }
@@ -120,9 +171,9 @@ void MyGLWidget::resizeGL(int w, int h) {
 
 }
 
-//----------------------------------------
+//####################################################
 // Slots
-//----------------------------------------
+//####################################################
 
 void MyGLWidget::setFOV(int value) {
     this->m_FOV = value;
