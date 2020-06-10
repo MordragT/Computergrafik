@@ -136,6 +136,22 @@ MainWindow::MainWindow(QWidget *parent)
                 [=]() {
         this->reset();
     });
+
+    QObject::connect(
+                ui->cbAnimate,
+                &QCheckBox::clicked,
+                this,
+                [=](bool value) {
+        ui->openGLWidget->setAnimate(value);
+    });
+
+    QObject::connect(
+                ui->cbCamera,
+                &QCheckBox::clicked,
+                this,
+                [=](bool value) {
+        ui->openGLWidget->setCamera(value);
+    });
 }
 
 MainWindow::~MainWindow()
@@ -144,7 +160,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::reset() {
-    ui->spFOV->setValue(0);
+    ui->spFOV->setValue(45);
     //ui->vsFOV->setValue(0);
     ui->spAngle->setValue(0);
     //ui->vsAngle->setValue(0);
@@ -155,4 +171,6 @@ void MainWindow::reset() {
     ui->hsRotationC->setValue(0);
     ui->dsbNear->setValue(0);
     ui->dsbFar->setValue(2);
+    ui->cbAnimate->setChecked(false);
+    ui->cbCamera->setChecked(false);
 }

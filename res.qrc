@@ -4,5 +4,10 @@
         <file>sample.vert</file>
         <file>sample_texture.jpg</file>
         <file>color.frag</file>
+        <file>gimbal.obj</file>
+        <file>sphere.obj</file>
+        <file>gimbal.vert</file>
+        <file>gimbal.frag</file>
+        <file>gimbal_wood.jpg</file>
     </qresource>
 </RCC>

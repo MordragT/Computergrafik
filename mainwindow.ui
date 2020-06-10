@@ -165,6 +165,9 @@
               </item>
               <item row="1" column="1">
                <widget class="QSlider" name="hsRotationA">
+                <property name="maximum">
+                 <number>180</number>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -179,6 +182,9 @@
               </item>
               <item row="2" column="1">
                <widget class="QSlider" name="hsRotationB">
+                <property name="maximum">
+                 <number>180</number>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -193,6 +199,9 @@
               </item>
               <item row="3" column="1">
                <widget class="QSlider" name="hsRotationC">
+                <property name="maximum">
+                 <number>180</number>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -226,10 +235,18 @@
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QDoubleSpinBox" name="dsbNear"/>
+               <widget class="QDoubleSpinBox" name="dsbNear">
+                <property name="value">
+                 <double>0.000000000000000</double>
+                </property>
+               </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QDoubleSpinBox" name="dsbFar"/>
+               <widget class="QDoubleSpinBox" name="dsbFar">
+                <property name="value">
+                 <double>0.000000000000000</double>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -238,7 +255,21 @@
          </item>
          <item>
           <layout class="QFormLayout" name="flControlButtons">
-           <item row="0" column="1">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="cbAnimate">
+             <property name="text">
+              <string>Animate</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QCheckBox" name="cbCamera">
+             <property name="text">
+              <string>Camera</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
             <widget class="QPushButton" name="rbReset">
              <property name="text">
               <string>Reset</string>
@@ -303,12 +334,12 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>315</x>
-     <y>134</y>
+     <x>230</x>
+     <y>188</y>
     </hint>
     <hint type="destinationlabel">
-     <x>348</x>
-     <y>73</y>
+     <x>267</x>
+     <y>98</y>
     </hint>
    </hints>
   </connection>
@@ -335,12 +366,12 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>320</x>
-     <y>82</y>
+     <x>267</x>
+     <y>98</y>
     </hint>
     <hint type="destinationlabel">
-     <x>317</x>
-     <y>121</y>
+     <x>230</x>
+     <y>188</y>
     </hint>
    </hints>
   </connection>

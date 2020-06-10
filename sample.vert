@@ -9,9 +9,11 @@ layout(location = 2) in vec2 uvCoordinates;
 layout(location = 0) out vec3 vColor;
 layout(location = 1) out vec2 vUvCoordinates;
 
+layout(location = 0) uniform mat4x4 uRotMat;
+
 void main(void)
 {
-    gl_Position = vec4(aPosition, 1.0);
+    gl_Position = uRotMat * vec4(aPosition, 1.0);
     vColor = aColor;
     vUvCoordinates = uvCoordinates;
 }

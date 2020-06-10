@@ -12,6 +12,7 @@
 #include <QOpenGLTexture>
 #include <QOpenGLDebugLogger>
 
+#include "model.h"
 
 class MyGLWidget: public QOpenGLWidget, private QOpenGLFunctions_3_3_Core {
 
@@ -38,8 +39,12 @@ public slots:
     void setRotationA(int value);
     void setRotationB(int value);
     void setRotationC(int value);
+    void setAnimate(bool value);
+    void setCamera(bool value);
 
 signals:
+    void animateChanged(bool value);
+    void cameraChanged(bool value);
     void fovChanged(int value);
     void angleChanged(int value);
     void perspectiveChanged(bool value);
@@ -53,6 +58,7 @@ signals:
     void nearOVFL(double value);
 
 private:
+    /*
     struct Vertex {
         GLfloat position[3];
         GLfloat color[3];
@@ -80,25 +86,34 @@ private:
             .texCoordinates = {1, 0}
         }
     };
+
     GLushort m_indices[6] = { 0, 1, 2, 1, 2, 3 };
     QOpenGLBuffer* m_vbo;//{QOpenGLBuffer::VertexBuffer};
     QOpenGLBuffer* m_ibo;//{QOpenGLBuffer::IndexBuffer};
     QOpenGLVertexArrayObject m_vao;
     QOpenGLShaderProgram* m_prog;
     QOpenGLShaderProgram* m_progColor;
-    QOpenGLDebugLogger* logger;
     float m_transparency = 1.0f;
     float m_uvCoordinatesAdd = 0.0f;
     QOpenGLTexture* m_texture;
-    int m_FOV;
-    int m_angle;
-    bool m_perspective;
-    bool m_orthogonal;
-    double m_near;
-    double m_far;
-    int m_rotationA;
-    int m_rotationB;
-    int m_rotationC;
+    */
+    Model* m_sphere;
+    Model* m_innerGimbal;
+    Model* m_gimbal;
+    Model* m_outerGimbal;
+    double m_timer = 0;
+    QOpenGLDebugLogger* logger;
+    int m_FOV = 0;
+    int m_angle = 0;
+    bool m_perspective = false;
+    bool m_orthogonal = false;
+    double m_near = 0;
+    double m_far = 0;
+    int m_rotationA = 0;
+    int m_rotationB = 0;
+    int m_rotationC = 0;
+    bool m_animate = false;
+    bool m_camera = false;
     QVector3D m_cameraPos{0,0,0};
 };
 
