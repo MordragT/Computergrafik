@@ -143,6 +143,7 @@ void MyGLWidget::initializeGL() {
     this->m_prog->release();
     this->m_progColor->release();
     */
+    this->m_skybox = new Skybox{};
 
     this->m_sphere = new Model{};
     this->m_sphere->initGL(":/sphere.obj");
@@ -194,29 +195,19 @@ void MyGLWidget::paintGL() {
     this->m_progColor->release();
     */
 
-    QMatrix4x4 view;
-    view.lookAt(
-        QVector3D{0.0,0.0,10.0},  //eye
-        QVector3D{0.0,0.0,0.0},   //center
-        QVector3D{0.0,1.0,0.0}    //upvector
-    );
-
     int outerGimbalAngle = 0;
     int gimbalAngle = 0;
     int innerGimbalAngle = 0;
-    int sphereAngle = 0;
 
+    this->m_timer += 0.5;
     if (this->m_animate) {
-        this->m_timer += 0.5;
         outerGimbalAngle = this->m_timer / 0.2;
         gimbalAngle = this->m_timer;
         innerGimbalAngle = this->m_timer / 2;
-        sphereAngle = this->m_timer;
     } else {
         outerGimbalAngle = this->m_rotationA;
         gimbalAngle = this->m_rotationB;
         innerGimbalAngle = this->m_rotationC;
-        sphereAngle = this->m_angle;
     }
 
     QMatrix4x4 outerGimbalAnimation;
@@ -231,13 +222,34 @@ void MyGLWidget::paintGL() {
     innerGimbalAnimation = gimbalAnimation * innerGimbalAnimation;
 
     QMatrix4x4 sphereAnimation;
-    sphereAnimation.rotate(sphereAngle, QVector3D{0, 0, 1});
+    sphereAnimation.rotate(this->m_timer, QVector3D{0, 0, 1});
     sphereAnimation.translate(QVector3D{0.0, 10.0, 2.0});
     sphereAnimation = gimbalAnimation * sphereAnimation;
-    sphereAnimation.rotate(this->m_angle, QVector3D{0, -1, 0}); // beim rollen drehen
+    // Beim rollen drehen
+    sphereAnimation.rotate(this->m_timer * 7, QVector3D{0, -1, 0});
+
+    QMatrix4x4 view;
+    if (this->m_camera) {
+        view = innerGimbalAnimation;
+    } else {
+        view.lookAt(
+            QVector3D{0.0,0.0,10.0},
+            QVector3D{0.0,0.0,0.0},
+            QVector3D{0.0,1.0,0.0}
+        );
+    }
+
+    QMatrix4x4 projection;
+    projection.perspective(
+                this->m_FOV,
+                (float)(this->width() /this->height()),
+                this->m_near, this->m_far
+    );
+
+    this->m_skybox->render(projection, view);
 
     this->m_outerGimbal->m_prog->bind();
-    this->m_outerGimbal->m_prog->setUniformValue("uRingColor", QVector4D{1.0, 0.0, 0.0, 1.0});
+    this->m_outerGimbal->m_prog->setUniformValue("uRingColor", QVector4D{0.5, 0.5, 1.0, 1.0});
     this->m_outerGimbal->drawElements(
                 this->m_FOV,
                 this->m_far,
@@ -249,7 +261,7 @@ void MyGLWidget::paintGL() {
     );
 
     this->m_gimbal->m_prog->bind();
-    this->m_gimbal->m_prog->setUniformValue("uRingColor", QVector4D{0.0, 1.0, 0.0, 1.0});
+    this->m_gimbal->m_prog->setUniformValue("uRingColor", QVector4D{0.5, 1.0, 0.5, 1.0});
     this->m_gimbal->drawElements(
                 this->m_FOV,
                 this->m_far,
@@ -261,7 +273,7 @@ void MyGLWidget::paintGL() {
     );
 
     this->m_innerGimbal->m_prog->bind();
-    this->m_innerGimbal->m_prog->setUniformValue("uRingColor", QVector4D{0.0, 0.0, 1.0, 1.0});
+    this->m_innerGimbal->m_prog->setUniformValue("uRingColor", QVector4D{1.0, 0.5, 0.5, 1.0});
     this->m_innerGimbal->drawElements(
                 this->m_FOV,
                 this->m_far,
@@ -279,7 +291,7 @@ void MyGLWidget::paintGL() {
                 this->m_far,
                 this->m_near,
                 (float)(this->width() / this->height()),
-                0.2,
+                0.215,
                 sphereAnimation,
                 view
     );

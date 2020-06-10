@@ -166,7 +166,7 @@
               <item row="1" column="1">
                <widget class="QSlider" name="hsRotationA">
                 <property name="maximum">
-                 <number>180</number>
+                 <number>360</number>
                 </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -183,7 +183,7 @@
               <item row="2" column="1">
                <widget class="QSlider" name="hsRotationB">
                 <property name="maximum">
-                 <number>180</number>
+                 <number>360</number>
                 </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -200,7 +200,7 @@
               <item row="3" column="1">
                <widget class="QSlider" name="hsRotationC">
                 <property name="maximum">
-                 <number>180</number>
+                 <number>360</number>
                 </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>

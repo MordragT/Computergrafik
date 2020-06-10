@@ -9,5 +9,13 @@
         <file>gimbal.vert</file>
         <file>gimbal.frag</file>
         <file>gimbal_wood.jpg</file>
+        <file>back.jpg</file>
+        <file>bottom.jpg</file>
+        <file>front.jpg</file>
+        <file>left.jpg</file>
+        <file>right.jpg</file>
+        <file>top.jpg</file>
+        <file>skybox.vert</file>
+        <file>skybox.frag</file>
     </qresource>
 </RCC>

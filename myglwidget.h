@@ -12,6 +12,7 @@
 #include <QOpenGLTexture>
 #include <QOpenGLDebugLogger>
 
+#include "skybox.h"
 #include "model.h"
 
 class MyGLWidget: public QOpenGLWidget, private QOpenGLFunctions_3_3_Core {
@@ -97,6 +98,7 @@ private:
     float m_uvCoordinatesAdd = 0.0f;
     QOpenGLTexture* m_texture;
     */
+    Skybox* m_skybox;
     Model* m_sphere;
     Model* m_innerGimbal;
     Model* m_gimbal;
