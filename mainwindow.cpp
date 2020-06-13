@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
                 ui->openGLWidget,
                 [=](int value) {
         ui->openGLWidget->setAngle(value);
-        //qInfo() << "Angle: " << value;
+        ui->openGLWidget->setShininess((float)value * 100 / 360);
     });
 
     QObject::connect(
@@ -108,7 +108,8 @@ MainWindow::MainWindow(QWidget *parent)
                 ui->openGLWidget,
                 [=](int value) {
         ui->openGLWidget->setRotationA(value);
-        //qInfo() << "RotationA: " << value;
+        ui->openGLWidget->setAmbient((double)value / 360);
+
     });
 
     QObject::connect(
@@ -117,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent)
                 ui->openGLWidget,
                 [=](int value) {
         ui->openGLWidget->setRotationB(value);
-        //qInfo() << "RotationB: " << value;
+        ui->openGLWidget->setDiffuse((double)value / 360);
     });
 
     QObject::connect(
@@ -126,7 +127,7 @@ MainWindow::MainWindow(QWidget *parent)
                 ui->openGLWidget,
                 [=](int value) {
         ui->openGLWidget->setRotationC(value);
-        //qInfo() << "RotationC: " << value;
+        ui->openGLWidget->setSpecular((double)value / 360);
     });
 
     QObject::connect(

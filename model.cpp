@@ -11,7 +11,11 @@ Model::Model()
       m_ibo(QOpenGLBuffer::IndexBuffer)
 {}
 
-void Model::initGL(const QString &filename) {
+void Model::initGL(
+        const QString &filename,
+        const QString &vertSrc,
+        const QString &fragSrc
+) {
     initializeOpenGLFunctions();
 
     m_vbo.create();
@@ -78,40 +82,53 @@ void Model::initGL(const QString &filename) {
     // Own Code
     //#######################################
 
-    // Texture
+    // Shader
+    this->m_prog = new QOpenGLShaderProgram{};
+    this->m_prog->addShaderFromSourceFile(QOpenGLShader::Vertex, vertSrc);
+    this->m_prog->addShaderFromSourceFile(QOpenGLShader::Fragment, fragSrc);
+    Q_ASSERT(this->m_prog->link());
+
+    // Default Texture
     QImage texImg;
-    Q_ASSERT(texImg.load(":/gimbal_wood.jpg"));
+    Q_ASSERT(texImg.load(":/tex/base_tex.png"));
     this->m_texture = new QOpenGLTexture{QOpenGLTexture::Target2D};
     this->m_texture->setData(texImg,QOpenGLTexture::MipMapGeneration::GenerateMipMaps);
     Q_ASSERT(this->m_texture->isCreated());
+}
 
-    // Shader
-    this->m_prog = new QOpenGLShaderProgram{};
-    this->m_prog->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/gimbal.vert");
-    this->m_prog->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/gimbal.frag");
-    Q_ASSERT(this->m_prog->link());
+void Model::addTex(const QString &tex) {
+    QImage texImg;
+    Q_ASSERT(texImg.load(tex));
+    this->m_texture = new QOpenGLTexture{QOpenGLTexture::Target2D};
+    this->m_texture->setData(texImg,QOpenGLTexture::MipMapGeneration::GenerateMipMaps);
+    Q_ASSERT(this->m_texture->isCreated());
 }
 
 void Model::drawElements(
-        float fov,
-        double far,
-        double near,
-        float aspectRatio,
-        float scale,
-        QMatrix4x4 rotation,
-        QMatrix4x4 view
+        const ObjectProperties &obj,
+        const Material &mat,
+        const Scene &scene
 ) {
     QMatrix4x4 model;
-    model.scale(QVector3D{scale, scale, scale});
-    model *= rotation;
+    model.scale(QVector3D{obj.scale, obj.scale, obj.scale});
+    model = model * obj.rotation;
 
-    QMatrix4x4 projection;
-    projection.perspective(fov, aspectRatio, near, far);
-
-    QMatrix4x4 mvp = projection * view * model;
+    QMatrix4x4 mvp = scene.projection * scene.view * model;
 
     this->m_prog->bind();
     this->m_prog->setUniformValue("uMvp", mvp);
+    this->m_prog->setUniformValue("uModel", model);
+    this->m_prog->setUniformValue("uModelTransposed", model.inverted().transposed());
+    this->m_prog->setUniformValue("uViewPos", scene.viewPos);
+    this->m_prog->setUniformValue("uBaseColor", obj.baseColor);
+    this->m_prog->setUniformValue("uShininess", obj.shininess);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, scene.skybox->m_cubeTex);
+    this->m_prog->setUniformValue("uCubeMap", 0);
+    this->m_prog->setUniformValue("uMaterial.ambient", mat.ambient);
+    this->m_prog->setUniformValue("uMaterial.diffuse", mat.diffuse);
+    this->m_prog->setUniformValue("uMaterial.specular", mat.specular);
+    this->m_prog->setUniformValue("uMaterial.shininess", mat.shininess);
+
     this->m_texture->bind();
     this->m_vao.bind();
 

@@ -43,6 +43,7 @@ SOURCES += \
     skybox.cpp
 
 HEADERS += \
+    common.h \
     mainwindow.h \
     model.h \
     modelloader/modelloader.h \

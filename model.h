@@ -8,6 +8,7 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLTexture>
+#include "common.h"
 
 
 //#include "common.h"
@@ -17,15 +18,16 @@ class Model : QOpenGLFunctions_3_3_Core
 public:
     Model();
 
-    void initGL(const QString &filename);
+    void initGL(
+            const QString &filename,
+            const QString &vertSrc,
+            const QString &fragSrc
+    );
+    void addTex(const QString &tex);
     void drawElements(
-            float fov,
-            double far,
-            double near,
-            float aspectRatio,
-            float scale,
-            QMatrix4x4 rotation,
-            QMatrix4x4 view
+            const ObjectProperties &obj,
+            const Material &mat,
+            const Scene &scene
     );
     void finiGL();
     QOpenGLShaderProgram *m_prog;

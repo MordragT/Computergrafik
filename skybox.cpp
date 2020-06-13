@@ -67,27 +67,27 @@ Skybox::Skybox()
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubeTex);
 
     // right face
-    QImage faceImg_right(":/right.jpg");
+    QImage faceImg_right(":/cubemap/right.jpg");
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, faceImg_right.width(), faceImg_right.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, reinterpret_cast<void const*>(faceImg_right.constBits()));
 
     // left face
-    QImage faceImg_left(":/left.jpg");
+    QImage faceImg_left(":/cubemap/left.jpg");
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, faceImg_left.width(), faceImg_left.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, reinterpret_cast<void const*>(faceImg_left.constBits()));
 
     // top face
-    QImage faceImg_top(":/top.jpg");
+    QImage faceImg_top(":/cubemap/top.jpg");
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, faceImg_top.width(), faceImg_top.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, reinterpret_cast<void const*>(faceImg_top.constBits()));
 
     // bottom face
-    QImage faceImg_bottom(":/bottom.jpg");
+    QImage faceImg_bottom(":/cubemap/bottom.jpg");
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, faceImg_bottom.width(), faceImg_bottom.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, reinterpret_cast<void const*>(faceImg_bottom.constBits()));
 
     // back face
-    QImage faceImg_back(":/back.jpg");
+    QImage faceImg_back(":/cubemap/back.jpg");
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, faceImg_back.width(), faceImg_back.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, reinterpret_cast<void const*>(faceImg_back.constBits()));
 
     // front face
-    QImage faceImg_front(":/front.jpg");
+    QImage faceImg_front(":/cubemap/front.jpg");
     glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, faceImg_front.width(), faceImg_front.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, reinterpret_cast<void const*>(faceImg_front.constBits()));
 
     // set ltering (interpolation) options
@@ -100,8 +100,8 @@ Skybox::Skybox()
     m_prog = new QOpenGLShaderProgram{};
 
     // addShader() compiles and attaches shader stages for linking
-    m_prog->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/skybox.vert");
-    m_prog->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/skybox.frag");
+    m_prog->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shader/vert/skybox.vert");
+    m_prog->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shader/frag/skybox.frag");
 
     // now link attached stages
     m_prog->link();
@@ -131,7 +131,7 @@ void Skybox::render(const QMatrix4x4 &projection, QMatrix4x4 view){
     // Bind Program and ll uniforms
     m_prog->setUniformValue(0, projection);
     m_prog->setUniformValue(1, view);
-    m_prog->setUniformValue(8, 0);
+    m_prog->setUniformValue(7, 0);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
     // Release VAO

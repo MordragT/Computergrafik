@@ -11,9 +11,13 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLDebugLogger>
+#include <QVector>
 
 #include "skybox.h"
 #include "model.h"
+#include "common.h"
+
+const unsigned NUM_LS = 5;
 
 class MyGLWidget: public QOpenGLWidget, private QOpenGLFunctions_3_3_Core {
 
@@ -42,8 +46,16 @@ public slots:
     void setRotationC(int value);
     void setAnimate(bool value);
     void setCamera(bool value);
+    void setAmbient(double value);
+    void setDiffuse(double value);
+    void setSpecular(double value);
+    void setShininess(float value);
 
 signals:
+    void shininessChanged(float value);
+    void ambientChanged(double value);
+    void diffuseChanged(double value);
+    void specularChanged(double value);
     void animateChanged(bool value);
     void cameraChanged(bool value);
     void fovChanged(int value);
@@ -59,54 +71,20 @@ signals:
     void nearOVFL(double value);
 
 private:
-    /*
-    struct Vertex {
-        GLfloat position[3];
-        GLfloat color[3];
-        GLfloat texCoordinates[2];
-    };
-    Vertex m_vertices[4] = {
-        Vertex {
-            .position = {-0.5, 0.5, 0.0},
-            .color = {0.5, 1.0, 0.0},
-            .texCoordinates = {0, 1}
-        },
-        Vertex {
-            .position = {0.5, 0.5, 0.0},
-            .color = {1.0, 0.5, 0.0},
-            .texCoordinates = {1, 1}
-        },
-        Vertex {
-            .position = {-0.5, -0.5, 0.0},
-            .color = {0.0, 1.0, 0.5},
-            .texCoordinates = {0, 0}
-        },
-        Vertex {
-            .position = {0.5, -0.5, 0.0},
-            .color = {1.0, 0.0, 1.0},
-            .texCoordinates = {1, 0}
-        }
-    };
-
-    GLushort m_indices[6] = { 0, 1, 2, 1, 2, 3 };
-    QOpenGLBuffer* m_vbo;//{QOpenGLBuffer::VertexBuffer};
-    QOpenGLBuffer* m_ibo;//{QOpenGLBuffer::IndexBuffer};
-    QOpenGLVertexArrayObject m_vao;
-    QOpenGLShaderProgram* m_prog;
-    QOpenGLShaderProgram* m_progColor;
-    float m_transparency = 1.0f;
-    float m_uvCoordinatesAdd = 0.0f;
-    QOpenGLTexture* m_texture;
-    */
     Skybox* m_skybox;
     Model* m_sphere;
     Model* m_innerGimbal;
     Model* m_gimbal;
     Model* m_outerGimbal;
+    LightSource m_lightSources[NUM_LS];
+    Model* m_lightModels[NUM_LS];
+    QVector<ObjectProperties> m_lightProps;
+    unsigned m_uboLights;
     double m_timer = 0;
     QOpenGLDebugLogger* logger;
     int m_FOV = 0;
     int m_angle = 0;
+    float m_shininess = 0;
     bool m_perspective = false;
     bool m_orthogonal = false;
     double m_near = 0;
@@ -114,6 +92,9 @@ private:
     int m_rotationA = 0;
     int m_rotationB = 0;
     int m_rotationC = 0;
+    double m_ambient = 0.0;
+    double m_diffuse = 0.0;
+    double m_specular = 0.0;
     bool m_animate = false;
     bool m_camera = false;
     QVector3D m_cameraPos{0,0,0};
