@@ -19,14 +19,15 @@
 
 const unsigned NUM_LS = 5;
 
-class MyGLWidget: public QOpenGLWidget, private QOpenGLFunctions_3_3_Core {
+class MyGLWidget : public QOpenGLWidget, private QOpenGLFunctions_3_3_Core
+{
 
     Q_OBJECT
 
 public:
     MyGLWidget(QWidget *parent);
     ~MyGLWidget();
-    void keyPressEvent( QKeyEvent * event ) override;
+    void keyPressEvent(QKeyEvent *event) override;
     //Initialisierung: Sets up OpenGL ressources and state
     void initializeGL() override;
     //Render: Renders the OpenGL Scene
@@ -71,17 +72,15 @@ signals:
     void nearOVFL(double value);
 
 private:
-    Skybox* m_skybox;
-    Model* m_sphere;
-    Model* m_innerGimbal;
-    Model* m_gimbal;
-    Model* m_outerGimbal;
+    Skybox *m_skybox;
+    Model *m_sphere;
+    Model *m_gimbal;
     LightSource m_lightSources[NUM_LS];
-    Model* m_lightModels[NUM_LS];
+    Model *m_light;
     QVector<ObjectProperties> m_lightProps;
     unsigned m_uboLights;
     double m_timer = 0;
-    QOpenGLDebugLogger* logger;
+    QOpenGLDebugLogger *logger;
     int m_FOV = 0;
     int m_angle = 0;
     float m_shininess = 0;
@@ -97,7 +96,9 @@ private:
     double m_specular = 0.0;
     bool m_animate = false;
     bool m_camera = false;
-    QVector3D m_cameraPos{0,0,0};
+    QVector3D m_cameraPos{0, 0, 0};
+    float m_viewAngleVertical = 0.0;
+    float m_viewAngleHorizontal = 0.0;
 };
 
 #endif // MYGLWIDGET_H

@@ -5,11 +5,13 @@
 #include <QOpenGLDebugLogger>
 #include <QQueue>
 
-MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent) {
+MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent)
+{
     setFocusPolicy(Qt::StrongFocus);
 }
 
-MyGLWidget::~MyGLWidget() {
+MyGLWidget::~MyGLWidget()
+{
     // Make Current to enable for cleanup
     makeCurrent();
     delete this->logger;
@@ -17,19 +19,33 @@ MyGLWidget::~MyGLWidget() {
     doneCurrent();
 }
 
-void MyGLWidget::keyPressEvent( QKeyEvent * event ) {
-    switch(event->key()) {
+void MyGLWidget::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key())
+    {
     case Qt::Key_W:
-        this->m_cameraPos.setZ(this->m_cameraPos.z() + 0.2);
+        this->m_cameraPos.setZ(this->m_cameraPos.z() - 0.2);
         break;
     case Qt::Key_A:
         this->m_cameraPos.setX(this->m_cameraPos.x() - 0.2);
         break;
     case Qt::Key_S:
-        this->m_cameraPos.setZ(this->m_cameraPos.z() - 0.2);
+        this->m_cameraPos.setZ(this->m_cameraPos.z() + 0.2);
         break;
     case Qt::Key_D:
         this->m_cameraPos.setX(this->m_cameraPos.x() + 0.2);
+        break;
+    case Qt::Key_Up:
+        this->m_viewAngleVertical += 2;
+        break;
+    case Qt::Key_Down:
+        this->m_viewAngleVertical -= 2;
+        break;
+    case Qt::Key_Left:
+        this->m_viewAngleHorizontal += 2;
+        break;
+    case Qt::Key_Right:
+        this->m_viewAngleHorizontal -= 2;
         break;
     default:
         QOpenGLWidget::keyPressEvent(event);
@@ -38,7 +54,8 @@ void MyGLWidget::keyPressEvent( QKeyEvent * event ) {
     //qInfo() << m_cameraPos;
 }
 
-void MyGLWidget::initializeGL() {
+void MyGLWidget::initializeGL()
+{
     // Lade OpenGL funktionen vom Treiber
     Q_ASSERT(initializeOpenGLFunctions());
 
@@ -48,10 +65,10 @@ void MyGLWidget::initializeGL() {
     this->logger = new QOpenGLDebugLogger(this);
     logger->initialize();
 
-    glEnable ( GL_BLEND );
+    glEnable(GL_BLEND);
     // Enable Face Culling (Hide Faces shown from the back)
     //glEnable(GL_CULL_FACE);
-    glBlendFunc ( GL_SRC_ALPHA , GL_ONE_MINUS_SRC_ALPHA );
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
 
     // clear color einstellen: dunkelgrau
@@ -63,34 +80,30 @@ void MyGLWidget::initializeGL() {
     this->m_sphere->initGL(":/obj/sphere.obj", ":/shader/vert/gimbal.vert", ":/shader/frag/gimbal.frag");
     this->m_sphere->addTex(":/tex/gimbal_wood.jpg");
 
-    this->m_innerGimbal = new Model{};
-    this->m_innerGimbal->initGL(":/obj/gimbal.obj", ":/shader/vert/sample.vert", ":/shader/frag/sample.frag");
-    this->m_innerGimbal->addTex(":/tex/gimbal_wood.jpg");
-
     this->m_gimbal = new Model{};
     this->m_gimbal->initGL(":/obj/gimbal.obj", ":/shader/vert/sample.vert", ":/shader/frag/sample.frag");
     this->m_gimbal->addTex(":/tex/gimbal_wood.jpg");
 
-    this->m_outerGimbal = new Model{};
-    this->m_outerGimbal->initGL(":/obj/gimbal.obj", ":/shader/vert/sample.vert", ":/shader/frag/sample.frag");
-    this->m_outerGimbal->addTex(":/tex/gimbal_wood.jpg");
-
     this->m_lightProps = {
-        ObjectProperties {.position = QVector3D{18.0, 0.0, 0.0}, .baseColor = QVector3D{1.0, 0.0, 0.0}},
-        ObjectProperties {.position = QVector3D{0.0, 18.0, 0.0}, .baseColor = QVector3D{0.0, 1.0, 0.0}},
-        ObjectProperties {.position = QVector3D{0.0, 0.0, 18.0}, .baseColor = QVector3D{0.0, 0.0, 1.0}},
-        ObjectProperties {.position = QVector3D{-18.0, 0.0, 0.0}, .baseColor = QVector3D{1.0, 1.0, 0.0}},
-        ObjectProperties {.position = QVector3D{0.0, -18.0, 0.0}, .baseColor = QVector3D{0.0, 1.0, 1.0}},
+        ObjectProperties{.position = QVector3D{18.0, 0.0, 0.0}, .baseColor = QVector3D{1.0, 0.0, 0.0}},
+        ObjectProperties{.position = QVector3D{0.0, 18.0, 0.0}, .baseColor = QVector3D{0.0, 1.0, 0.0}},
+        ObjectProperties{.position = QVector3D{0.0, 0.0, 18.0}, .baseColor = QVector3D{0.0, 0.0, 1.0}},
+        ObjectProperties{.position = QVector3D{-18.0, 0.0, 0.0}, .baseColor = QVector3D{1.0, 1.0, 0.0}},
+        ObjectProperties{.position = QVector3D{0.0, -18.0, 0.0}, .baseColor = QVector3D{0.0, 1.0, 1.0}},
     };
 
     // Generate Uniform Buffer Object
-    glGenBuffers (1, &this->m_uboLights );
-    glBindBuffer ( GL_UNIFORM_BUFFER , this->m_uboLights );
-    glBufferData ( GL_UNIFORM_BUFFER , NUM_LS * sizeof(LightSource), nullptr , GL_STATIC_DRAW ); // Set Buer size, 64 Byte for each LS
-    glBindBufferBase ( GL_UNIFORM_BUFFER , 0, this->m_uboLights );
-    glBindBuffer ( GL_UNIFORM_BUFFER , 0);
+    glGenBuffers(1, &this->m_uboLights);
+    glBindBuffer(GL_UNIFORM_BUFFER, this->m_uboLights);
+    glBufferData(GL_UNIFORM_BUFFER, NUM_LS * sizeof(LightSource), nullptr, GL_STATIC_DRAW); // Set Buer size, 64 Byte for each LS
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, this->m_uboLights);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    for(unsigned i = 0; i < NUM_LS; i += 1) {
+    this->m_light = new Model{};
+    this->m_light->initGL(":/obj/sphere.obj", ":/shader/vert/light.vert", ":/shader/frag/light.frag");
+
+    for (unsigned i = 0; i < NUM_LS; i += 1)
+    {
         ObjectProperties lightProps = this->m_lightProps.at(i);
         this->m_lightSources[i].position = lightProps.position;
         this->m_lightSources[i].color = lightProps.baseColor;
@@ -100,9 +113,6 @@ void MyGLWidget::initializeGL() {
         this->m_lightSources[i].constant = 1.0;
         this->m_lightSources[i].linear = 0.0014;
         this->m_lightSources[i].quadratic = 0.000007;
-        Model* light = new Model{};
-        light->initGL(":/obj/sphere.obj", ":/shader/vert/light.vert", ":/shader/frag/light.frag");
-        this->m_lightModels[i] = light;
     }
 
     this->setFar(99.99);
@@ -110,7 +120,8 @@ void MyGLWidget::initializeGL() {
     this->setFOV(45);
 }
 
-void MyGLWidget::paintGL() {
+void MyGLWidget::paintGL()
+{
     // Render in clear color
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -122,11 +133,14 @@ void MyGLWidget::paintGL() {
     int innerGimbalAngle = 0;
 
     this->m_timer += 0.5;
-    if (this->m_animate) {
+    if (this->m_animate)
+    {
         outerGimbalAngle = this->m_timer / 0.2;
         gimbalAngle = this->m_timer;
         innerGimbalAngle = this->m_timer / 2;
-    } else {
+    }
+    else
+    {
         outerGimbalAngle = this->m_rotationA;
         gimbalAngle = this->m_rotationB;
         innerGimbalAngle = this->m_rotationC;
@@ -151,74 +165,72 @@ void MyGLWidget::paintGL() {
     sphereAnimation.rotate(this->m_timer * 7, QVector3D{0, -1, 0});
 
     QMatrix4x4 view;
-    if (this->m_camera) {
+    if (this->m_camera)
+    {
         view = innerGimbalAnimation;
-    } else {
+    }
+    else
+    {
         view.lookAt(
-            QVector3D{0.0,0.0,10.0},
-            QVector3D{0.0,0.0,0.0},
-            QVector3D{0.0,1.0,0.0}
-        );
+            QVector3D{this->m_cameraPos.x(), this->m_cameraPos.y(), this->m_cameraPos.z() + (float)10.0},
+            QVector3D{this->m_cameraPos.x(), 0.0, 0.0},
+            QVector3D{0.0, 1.0, 0.0});
+        view.rotate(this->m_viewAngleVertical, QVector3D{1.0, 0.0, 0.0});
+        view.rotate(this->m_viewAngleHorizontal, QVector3D{0.0, 1.0, 0.0});
     }
 
     QMatrix4x4 projection;
     projection.perspective(
-                this->m_FOV,
-                (float)(this->width() /this->height()),
-                this->m_near,
-                this->m_far
-    );
+        this->m_FOV,
+        (float)(this->width() / this->height()),
+        this->m_near,
+        this->m_far);
 
     Scene scene{
         .projection = projection,
         .view = view,
         .viewPos = this->m_cameraPos,
-        .skybox = this->m_skybox
-    };
+        .skybox = this->m_skybox};
 
     Material mat{
         .ambient = QVector3D{0.25, 0.2, 0.0},
         .diffuse = QVector3D{0.75, 0.6, 0.2},
         .specular = QVector3D{0.6, 0.5, 0.3},
-        .shininess = 0.4
-    };
+        .shininess = 0.4};
 
     ObjectProperties innerGimbalProps{
         .baseColor = QVector3D{0.5, 0.5, 1.0},
-        .rotation = outerGimbalAnimation,
+        .rotation = innerGimbalAnimation,
         .scale = 1.75,
-        .shininess = this->m_shininess
-    };
+        .shininess = this->m_shininess};
 
     ObjectProperties gimbalProps{
         .baseColor = QVector3D{0.5, 1.0, 0.5},
         .rotation = gimbalAnimation,
         .scale = 2.25,
-        .shininess = this->m_shininess
-    };
+        .shininess = this->m_shininess};
 
     ObjectProperties outerGimbalProps{
         .baseColor = QVector3D{1.0, 0.5, 0.5},
-        .rotation = innerGimbalAnimation,
+        .rotation = outerGimbalAnimation,
         .scale = 2.75,
-        .shininess = this->m_shininess
-    };
+        .shininess = this->m_shininess};
 
-    ObjectProperties sphereProps {
+    ObjectProperties sphereProps{
         .baseColor = QVector3D{1.0, 1.0, 1.0},
         .rotation = sphereAnimation,
         .scale = 0.215,
-        .shininess = this->m_shininess
-    };
+        .shininess = this->m_shininess};
 
-    glBindBuffer ( GL_UNIFORM_BUFFER , this->m_uboLights ); //Bind Buffer
+    glBindBuffer(GL_UNIFORM_BUFFER, this->m_uboLights); //Bind Buffer
     // Calculate something
-    glBindBufferBase ( GL_UNIFORM_BUFFER , 0, this->m_uboLights );
-    glBufferSubData ( GL_UNIFORM_BUFFER , 0, sizeof( this->m_lightSources ), this->m_lightSources ); // Übergebe LS an den Shader
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, this->m_uboLights);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(this->m_lightSources), this->m_lightSources); // Übergebe LS an den Shader
 
     this->m_skybox->render(projection, view);
 
-    for(unsigned i = 0; i < NUM_LS; i += 1) {
+    for (unsigned i = 0; i < NUM_LS; i += 1)
+    {
         ObjectProperties lightProps = this->m_lightProps.at(i);
         lightProps.scale = 0.2;
 
@@ -239,113 +251,133 @@ void MyGLWidget::paintGL() {
         QMatrix4x4 mvp = scene.projection * scene.view * model;
         this->m_lightSources[i].position = mvp * lightProps.position;
         //
-
-        this->m_lightModels[i]->drawElements(lightProps, mat, scene);
+        this->m_light->drawElements(lightProps, mat, scene);
     }
 
-    this->m_outerGimbal->drawElements(outerGimbalProps, mat, scene);
+    this->m_gimbal->drawElements(outerGimbalProps, mat, scene);
     this->m_gimbal->drawElements(gimbalProps, mat, scene);
-    this->m_innerGimbal->drawElements(innerGimbalProps, mat, scene);
+    this->m_gimbal->drawElements(innerGimbalProps, mat, scene);
     this->m_sphere->drawElements(sphereProps, mat, scene);
 
     // Read the internal OpenGL Debug Log
     const QList<QOpenGLDebugMessage> messages = this->logger->loggedMessages();
-        for (const QOpenGLDebugMessage &message : messages)
-            qDebug() << message;
+    for (const QOpenGLDebugMessage &message : messages)
+        qDebug() << message;
 
     update();
 }
 
-void MyGLWidget::resizeGL(int w, int h) {
-
+void MyGLWidget::resizeGL(int w, int h)
+{
 }
 
 //####################################################
 // Slots
 //####################################################
 
-void MyGLWidget::setFOV(int value) {
+void MyGLWidget::setFOV(int value)
+{
     this->m_FOV = value;
     emit fovChanged(value);
 }
 
-void MyGLWidget::setAngle(int angle) {
+void MyGLWidget::setAngle(int angle)
+{
     this->m_angle = angle;
     emit angleChanged(angle);
 }
 
-void MyGLWidget::setPerspective(bool toggle) {
+void MyGLWidget::setPerspective(bool toggle)
+{
     this->m_perspective = toggle;
     emit perspectiveChanged(toggle);
 }
 
-void MyGLWidget::setOrthogonal(bool toggle) {
+void MyGLWidget::setOrthogonal(bool toggle)
+{
     this->m_orthogonal = toggle;
     emit orthogonalChanged(toggle);
 }
 
-void MyGLWidget::setNear(double value) {
+void MyGLWidget::setNear(double value)
+{
     double diff = this->m_far - value;
-    if(diff >= 2.0) {
+    if (diff >= 2.0)
+    {
         //qInfo() << "near" << value << "diff" << diff;
         this->m_near = value;
         emit nearChanged(value);
-    } else emit nearOVFL(this->m_near);
+    }
+    else
+        emit nearOVFL(this->m_near);
 }
 
-void MyGLWidget::setFar(double value) {
+void MyGLWidget::setFar(double value)
+{
     double diff = value - this->m_near;
-    if(diff >= 2.0) {
+    if (diff >= 2.0)
+    {
         //qInfo() << "far" << value << "diff" << diff;
         this->m_far = value;
         emit farChanged(value);
-    } else emit farOVFL(this->m_far);
+    }
+    else
+        emit farOVFL(this->m_far);
 }
 
-void MyGLWidget::setRotationA(int value) {
+void MyGLWidget::setRotationA(int value)
+{
     this->m_rotationA = value;
     //this->m_transparency = (float)value/100;
     //qInfo() << this->m_transparency;
     emit rotationAChanged(value);
 }
 
-void MyGLWidget::setRotationB(int value) {
+void MyGLWidget::setRotationB(int value)
+{
     this->m_rotationB = value;
     //this->m_uvCoordinatesAdd = (float)value/100;
     emit rotationBChanged(value);
 }
 
-void MyGLWidget::setRotationC(int value) {
+void MyGLWidget::setRotationC(int value)
+{
     this->m_rotationC = value;
     emit rotationCChanged(value);
 }
 
-void MyGLWidget::setAnimate(bool value) {
+void MyGLWidget::setAnimate(bool value)
+{
     this->m_animate = value;
     emit animateChanged(value);
 }
 
-void MyGLWidget::setCamera(bool value) {
+void MyGLWidget::setCamera(bool value)
+{
     this->m_camera = value;
     emit cameraChanged(value);
 }
 
-void MyGLWidget::setDiffuse(double value) {
+void MyGLWidget::setDiffuse(double value)
+{
     this->m_diffuse = value;
     emit diffuseChanged(value);
 }
 
-void MyGLWidget::setAmbient(double value) {
+void MyGLWidget::setAmbient(double value)
+{
     this->m_ambient = value;
     emit ambientChanged(value);
 }
 
-void MyGLWidget::setSpecular(double value) {
+void MyGLWidget::setSpecular(double value)
+{
     this->m_specular = value;
     emit specularChanged(value);
 }
 
-void MyGLWidget::setShininess(float value) {
+void MyGLWidget::setShininess(float value)
+{
     this->m_shininess = value;
     emit shininessChanged(value);
 }
