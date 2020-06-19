@@ -276,6 +276,13 @@
              </property>
             </widget>
            </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="cbDepthData">
+             <property name="text">
+              <string>DepthData</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
         </layout>

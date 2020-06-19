@@ -153,6 +153,14 @@ MainWindow::MainWindow(QWidget *parent)
                 [=](bool value) {
         ui->openGLWidget->setCamera(value);
     });
+
+    QObject::connect(
+                ui->cbDepthData,
+                &QCheckBox::clicked,
+                this,
+                [=](bool value) {
+        ui->openGLWidget->setDepthData(value);
+    });
 }
 
 MainWindow::~MainWindow()

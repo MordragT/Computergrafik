@@ -4,6 +4,7 @@
 #include <QOpenGLTexture>
 #include <QOpenGLDebugLogger>
 #include <QQueue>
+#include <QOpenGLFramebufferObject>
 
 MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -47,6 +48,15 @@ void MyGLWidget::keyPressEvent(QKeyEvent *event)
     case Qt::Key_Right:
         this->m_viewAngleHorizontal -= 2;
         break;
+    case Qt::Key_P:
+    {
+        makeCurrent();
+        //QImage img = this->grabFramebuffer();
+        QImage img = this->m_fbo->toImage();
+        doneCurrent();
+        img.save("screenshot.png");
+        break;
+    }
     default:
         QOpenGLWidget::keyPressEvent(event);
         break;
@@ -118,16 +128,28 @@ void MyGLWidget::initializeGL()
     this->setFar(99.99);
     this->setNear(0.01);
     this->setFOV(45);
+
+    //##################################################
+    // Praktikum 05
+    //##################################################
+
+    this->m_fbo = new QOpenGLFramebufferObject{this->width(), this->height(), QOpenGLFramebufferObject::Attachment::Depth};
+    this->m_fbo->addColorAttachment(this->width(), this->height());
+    Q_ASSERT(this->m_fbo->isValid());
+    Q_ASSERT(this->m_fbo->hasOpenGLFramebufferBlit());
+    this->m_fboHandle = this->m_fbo->handle();
+    //this->m_fbo->blitFramebuffer(0, )
+}
+
+void MyGLWidget::resizeGL(int w, int h)
+{
+    this->m_fbo = new QOpenGLFramebufferObject{w, h, QOpenGLFramebufferObject::Attachment::Depth};
+    this->m_fbo->addColorAttachment(w, h);
+    this->m_fboHandle = this->m_fbo->handle();
 }
 
 void MyGLWidget::paintGL()
 {
-    // Render in clear color
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    // Clear Depth Buffer
-    glClear(GL_DEPTH_BUFFER_BIT);
-
     int outerGimbalAngle = 0;
     int gimbalAngle = 0;
     int innerGimbalAngle = 0;
@@ -222,6 +244,14 @@ void MyGLWidget::paintGL()
         .scale = 0.215,
         .shininess = this->m_shininess};
 
+    this->m_fbo->bind();
+
+    // Render in clear color
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Clear Depth Buffer
+    glClear(GL_DEPTH_BUFFER_BIT);
+
     glBindBuffer(GL_UNIFORM_BUFFER, this->m_uboLights); //Bind Buffer
     // Calculate something
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, this->m_uboLights);
@@ -259,16 +289,22 @@ void MyGLWidget::paintGL()
     this->m_gimbal->drawElements(innerGimbalProps, mat, scene);
     this->m_sphere->drawElements(sphereProps, mat, scene);
 
+    QRect rect{0, 0, this->width(), this->height()};
+    if (this->m_depthData) {
+        QImage img{this->size(), QImage::Format_RGBA8888};
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, img.bits());
+        QOpenGLTexture tex{img};
+        QOpenGLFramebufferObject::blitFramebuffer(0, rect, this->m_fbo, rect);
+    } else {
+        QOpenGLFramebufferObject::blitFramebuffer(0, rect, this->m_fbo, rect);
+    }
+
     // Read the internal OpenGL Debug Log
     const QList<QOpenGLDebugMessage> messages = this->logger->loggedMessages();
     for (const QOpenGLDebugMessage &message : messages)
         qDebug() << message;
 
     update();
-}
-
-void MyGLWidget::resizeGL(int w, int h)
-{
 }
 
 //####################################################
@@ -380,4 +416,10 @@ void MyGLWidget::setShininess(float value)
 {
     this->m_shininess = value;
     emit shininessChanged(value);
+}
+
+void MyGLWidget::setDepthData(bool value)
+{
+    this->m_depthData = value;
+    emit depthDataChanged(value);
 }

@@ -5,13 +5,14 @@
 #include <QObject>
 #include <QKeyEvent>
 #include <QVector3D>
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QOpenGLDebugLogger>
 #include <QVector>
+#include <QOpenGLFramebufferObject>
 
 #include "skybox.h"
 #include "model.h"
@@ -19,7 +20,7 @@
 
 const unsigned NUM_LS = 5;
 
-class MyGLWidget : public QOpenGLWidget, private QOpenGLFunctions_3_3_Core
+class MyGLWidget : public QOpenGLWidget, private QOpenGLFunctions_4_3_Core
 {
 
     Q_OBJECT
@@ -51,6 +52,7 @@ public slots:
     void setDiffuse(double value);
     void setSpecular(double value);
     void setShininess(float value);
+    void setDepthData(bool value);
 
 signals:
     void shininessChanged(float value);
@@ -70,8 +72,11 @@ signals:
     void rotationCChanged(int value);
     void farOVFL(double value);
     void nearOVFL(double value);
+    void depthDataChanged(bool value);
 
 private:
+    QOpenGLFramebufferObject *m_fbo;
+    GLuint m_fboHandle = 0;
     Skybox *m_skybox;
     Model *m_sphere;
     Model *m_gimbal;
@@ -99,6 +104,7 @@ private:
     QVector3D m_cameraPos{0, 0, 0};
     float m_viewAngleVertical = 0.0;
     float m_viewAngleHorizontal = 0.0;
+    bool m_depthData = false;
 };
 
 #endif // MYGLWIDGET_H

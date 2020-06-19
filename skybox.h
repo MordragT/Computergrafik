@@ -1,11 +1,11 @@
 #ifndef SKYBOX_H
 #define SKYBOX_H
 
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 
-class Skybox : QOpenGLFunctions_3_3_Core
+class Skybox : QOpenGLFunctions_4_3_Core
 {
 public:
     GLuint m_cubeTex;

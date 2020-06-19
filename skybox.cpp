@@ -117,7 +117,7 @@ Skybox::~Skybox(){
 void Skybox::render(const QMatrix4x4 &projection, QMatrix4x4 view){
 
     // temporarily disable writing depth values
-    glDepthMask(GL_FALSE);
+    //glDepthMask(GL_FALSE);
 
     // Erase translation in view matrix
     view.column(3) = QVector4D(0.0, 0.0, 0.0, 0.0);
@@ -138,6 +138,6 @@ void Skybox::render(const QMatrix4x4 &projection, QMatrix4x4 view){
     glBindVertexArray(0);
 
     // Turn depth writes back on
-    glDepthMask(GL_TRUE);
+    //glDepthMask(GL_TRUE);
 
 }
