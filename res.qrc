@@ -19,5 +19,7 @@
         <file>shader/vert/light.vert</file>
         <file>shader/frag/light.frag</file>
         <file>tex/base_tex.png</file>
+        <file>shader/frag/rect.frag</file>
+        <file>shader/vert/rect.vert</file>
     </qresource>
 </RCC>

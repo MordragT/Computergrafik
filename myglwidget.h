@@ -75,6 +75,9 @@ signals:
     void depthDataChanged(bool value);
 
 private:
+    Model *m_rect;
+    GLuint m_colorTex = 0;
+    GLuint m_depthTex = 0;
     QOpenGLFramebufferObject *m_fbo;
     GLuint m_fboHandle = 0;
     Skybox *m_skybox;

@@ -96,6 +96,61 @@ void Model::initGL(
     Q_ASSERT(this->m_texture->isCreated());
 }
 
+void Model::initGL(
+        const Vertex vertices[],
+        unsigned verticesNum,
+        const GLuint indices[],
+        unsigned indicesNum,
+        const QString &vertSrc,
+        const QString &fragSrc
+) {
+    initializeOpenGLFunctions();
+
+    Q_ASSERT(m_vbo.create());
+    Q_ASSERT(m_ibo.create());
+    Q_ASSERT(m_vao.create());
+
+    m_vao.bind();
+    m_vbo.bind();
+    m_ibo.bind();
+
+    m_iboCount = indicesNum;
+
+    m_vbo.allocate(vertices, verticesNum * sizeof(Vertex));
+    m_ibo.allocate(indices, m_iboCount * sizeof(GLuint));
+    m_vbo.release();
+    m_ibo.release();
+    m_vao.release();
+
+    // Shader
+    this->m_prog = new QOpenGLShaderProgram{};
+    this->m_prog->addShaderFromSourceFile(QOpenGLShader::Vertex, vertSrc);
+    this->m_prog->addShaderFromSourceFile(QOpenGLShader::Fragment, fragSrc);
+    Q_ASSERT(this->m_prog->link());
+
+    size_t stride = 4 * sizeof(GLfloat);
+
+    m_vao.bind();
+    m_vbo.bind();
+    m_ibo.bind();
+    this->m_prog->bind();
+    this->m_prog->enableAttributeArray(0);
+    this->m_prog->setAttributeBuffer(0, GL_FLOAT, 0, 2, stride);
+    this->m_prog->enableAttributeArray(1);
+    this->m_prog->setAttributeBuffer(1, GL_FLOAT, 2 * sizeof(GLfloat), 2, stride);
+    m_vao.release();
+    m_vbo.release();
+    m_ibo.release();
+    m_prog->release();
+
+    // Default Texture
+    QImage texImg;
+    Q_ASSERT(texImg.load(":/tex/base_tex.png"));
+    this->m_texture = new QOpenGLTexture{QOpenGLTexture::Target2D};
+    this->m_texture->setData(texImg,QOpenGLTexture::MipMapGeneration::GenerateMipMaps);
+    Q_ASSERT(this->m_texture->isCreated());
+}
+
 void Model::addTex(const QString &tex) {
     QImage texImg;
     Q_ASSERT(texImg.load(tex));
@@ -103,6 +158,11 @@ void Model::addTex(const QString &tex) {
     this->m_texture->setData(texImg,QOpenGLTexture::MipMapGeneration::GenerateMipMaps);
     Q_ASSERT(this->m_texture->isCreated());
 }
+
+void Model::setTex(QOpenGLTexture *tex) {
+    this->m_texture = tex;
+}
+
 
 void Model::drawElements(
         const ObjectProperties &obj,
@@ -130,6 +190,20 @@ void Model::drawElements(
     this->m_prog->setUniformValue("uMaterial.shininess", mat.shininess);
 
     this->m_texture->bind();
+    this->m_vao.bind();
+
+    glDrawElements(GL_TRIANGLES, m_iboCount, GL_UNSIGNED_INT, nullptr);
+
+    this->m_vao.release();
+    this->m_prog->release();
+}
+
+void Model::drawElements(GLuint tex)
+{
+    this->m_prog->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    this->m_prog->setUniformValue("uTexture", 0);
     this->m_vao.bind();
 
     glDrawElements(GL_TRIANGLES, m_iboCount, GL_UNSIGNED_INT, nullptr);

@@ -23,12 +23,22 @@ public:
             const QString &vertSrc,
             const QString &fragSrc
     );
+    void initGL(
+            const Vertex vertices[],
+            unsigned verticesNum,
+            const GLuint indices[],
+            unsigned indicesNum,
+            const QString &vertSrc,
+            const QString &fragSrc
+    );
     void addTex(const QString &tex);
+    void setTex(QOpenGLTexture *tex);
     void drawElements(
             const ObjectProperties &obj,
             const Material &mat,
             const Scene &scene
     );
+    void drawElements(GLuint tex);
     void finiGL();
     QOpenGLShaderProgram *m_prog;
 

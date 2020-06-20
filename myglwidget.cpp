@@ -50,13 +50,27 @@ void MyGLWidget::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_P:
     {
-        makeCurrent();
+
         //QImage img = this->grabFramebuffer();
-        QImage img = this->m_fbo->toImage();
+        //QImage img = this->m_fbo->toImage();
+        QImage img{this->size(), QImage::Format_RGBA8888};
+        makeCurrent();
+        glBindTexture(GL_TEXTURE_2D, this->m_colorTex);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
         doneCurrent();
-        img.save("screenshot.png");
+        img.mirrored(false, true).save("screenshot.png");
         break;
     }
+//    case Qt::Key_O:
+//    {
+//        QImage img{this->size(), QImage::Format_RGBA8888};
+//        makeCurrent();
+//        glBindTexture(GL_TEXTURE_2D, this->m_depthTex);
+//        glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH, GL_UNSIGNED_BYTE, img.bits());
+//        doneCurrent();
+//        img.mirrored(false, true).save("depth.png");
+//        break;
+//    }
     default:
         QOpenGLWidget::keyPressEvent(event);
         break;
@@ -74,6 +88,61 @@ void MyGLWidget::initializeGL()
     Q_ASSERT(ctx->hasExtension(QByteArrayLiteral("GL_KHR_debug")));
     this->logger = new QOpenGLDebugLogger(this);
     logger->initialize();
+
+    //this->m_fbo = new QOpenGLFramebufferObject{this->width(), this->height()};
+    glGenFramebuffers(1, &this->m_fboHandle);
+
+    glGenTextures(1, &this->m_colorTex);
+    glBindTexture(GL_TEXTURE_2D, this->m_colorTex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGBA8,
+                width(),
+                height(),
+                0,
+                GL_BGRA,
+                GL_UNSIGNED_BYTE,
+                nullptr
+    );
+
+    glGenTextures(1, &this->m_depthTex);
+    glBindTexture(GL_TEXTURE_2D, this->m_depthTex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_DEPTH_COMPONENT16,
+                width(),
+                height(),
+                0,
+                GL_DEPTH_COMPONENT,
+                GL_UNSIGNED_BYTE,
+                nullptr
+    );
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->m_fboHandle);
+    //this->m_fbo->bind();
+
+    glFramebufferTexture2D(
+        GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->m_colorTex, 0
+    );
+    glFramebufferTexture2D(
+        GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->m_depthTex, 0
+    );
+
+//    Q_ASSERT(this->m_fbo->isValid());
+//    Q_ASSERT(this->m_fbo->hasOpenGLFramebufferBlit());
+//    this->m_fboHandle = this->m_fbo->handle();
+    Q_ASSERT(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
 
     glEnable(GL_BLEND);
     // Enable Face Culling (Hide Faces shown from the back)
@@ -129,23 +198,48 @@ void MyGLWidget::initializeGL()
     this->setNear(0.01);
     this->setFOV(45);
 
-    //##################################################
-    // Praktikum 05
-    //##################################################
+    Vertex position[4] = {
+        Vertex{
+            .position = {-1.0, -1.0},
+            .texCoordinates = {0.0, 0.0},
+        },
+        Vertex{
+            .position = {1.0, -1.0},
+            .texCoordinates = {1.0, 0.0},
+        },
+        Vertex{
+            .position = {-1.0, 1.0},
+            .texCoordinates = {0.0, 1.0},
+        },
+        Vertex{
+            .position = {1.0, 1.0},
+            .texCoordinates = {1.0, 1.0},
+        },
+    };
+    GLuint indices[6] {
+        0, 1, 2,
+        1, 2, 3
+    };
 
-    this->m_fbo = new QOpenGLFramebufferObject{this->width(), this->height(), QOpenGLFramebufferObject::Attachment::Depth};
-    this->m_fbo->addColorAttachment(this->width(), this->height());
-    Q_ASSERT(this->m_fbo->isValid());
-    Q_ASSERT(this->m_fbo->hasOpenGLFramebufferBlit());
-    this->m_fboHandle = this->m_fbo->handle();
-    //this->m_fbo->blitFramebuffer(0, )
+    this->m_rect = new Model{};
+    this->m_rect->initGL(position, 4, indices, 6, ":/shader/vert/rect.vert", ":/shader/frag/rect.frag");
 }
 
 void MyGLWidget::resizeGL(int w, int h)
 {
-    this->m_fbo = new QOpenGLFramebufferObject{w, h, QOpenGLFramebufferObject::Attachment::Depth};
-    this->m_fbo->addColorAttachment(w, h);
-    this->m_fboHandle = this->m_fbo->handle();
+//    delete this->m_fbo;
+//    this->m_fbo = new QOpenGLFramebufferObject{w, h, QOpenGLFramebufferObject::Attachment::Depth};
+//    this->m_fbo->addColorAttachment(w, h);
+//    this->m_fboHandle = this->m_fbo->handle();
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->m_fboHandle);
+    glBindTexture(GL_TEXTURE_2D, this->m_colorTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, this->m_depthTex);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, w, h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr
+    );
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void MyGLWidget::paintGL()
@@ -244,7 +338,8 @@ void MyGLWidget::paintGL()
         .scale = 0.215,
         .shininess = this->m_shininess};
 
-    this->m_fbo->bind();
+    //this->m_fbo->bind();
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->m_fboHandle);
 
     // Render in clear color
     glClear(GL_COLOR_BUFFER_BIT);
@@ -289,14 +384,16 @@ void MyGLWidget::paintGL()
     this->m_gimbal->drawElements(innerGimbalProps, mat, scene);
     this->m_sphere->drawElements(sphereProps, mat, scene);
 
-    QRect rect{0, 0, this->width(), this->height()};
     if (this->m_depthData) {
-        QImage img{this->size(), QImage::Format_RGBA8888};
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, img.bits());
-        QOpenGLTexture tex{img};
-        QOpenGLFramebufferObject::blitFramebuffer(0, rect, this->m_fbo, rect);
+        //this->m_fbo->bindDefault();
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->defaultFramebufferObject());
+        this->m_rect->drawElements(this->m_depthTex);
     } else {
-        QOpenGLFramebufferObject::blitFramebuffer(0, rect, this->m_fbo, rect);
+        //QRect rect{0, 0, this->width(), this->height()};
+        //QOpenGLFramebufferObject::blitFramebuffer(0, rect, this->m_fbo, rect);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, this->m_fboHandle);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->defaultFramebufferObject());
+        glBlitFramebuffer(0, 0, width(), height(), 0, 0, width(), height(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
     }
 
     // Read the internal OpenGL Debug Log

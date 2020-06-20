@@ -38,4 +38,9 @@ struct LightSource {
     float quadratic;
 };
 
+struct Vertex {
+    GLfloat position[2];
+    GLfloat texCoordinates[2];
+};
+
 #endif // MATERIAL_H
