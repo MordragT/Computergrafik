@@ -227,11 +227,11 @@ void MyGLWidget::initializeGL()
     this->m_rect->initGL(position, 4, indices, 6, ":/shader/vert/rect.vert", ":/shader/frag/rect.frag");
 
     this->m_gaussComputeShader = new QOpenGLShaderProgram{};
-    this->m_gaussComputeShader->addShaderFromSourceFile(QOpenGLShader::Compute, ":/shader/compute/compute_gauss.glsl");
+    this->m_gaussComputeShader->addShaderFromSourceFile(QOpenGLShader::Compute, ":/shader/compute/gauss.glsl");
     Q_ASSERT(this->m_gaussComputeShader->link());
 
     this->m_colorComputeShader = new QOpenGLShaderProgram{};
-    this->m_colorComputeShader->addShaderFromSourceFile(QOpenGLShader::Compute, ":/shader/compute/compute_filter.glsl");
+    this->m_colorComputeShader->addShaderFromSourceFile(QOpenGLShader::Compute, ":/shader/compute/color_filter.glsl");
     Q_ASSERT(this->m_colorComputeShader->link());
 }
 
