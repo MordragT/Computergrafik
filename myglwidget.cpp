@@ -1,10 +1,12 @@
-#include "myglwidget.h"
 #include <QtDebug>
 #include <QKeyEvent>
 #include <QOpenGLTexture>
 #include <QOpenGLDebugLogger>
 #include <QQueue>
 #include <QOpenGLFramebufferObject>
+
+#include "myglwidget.h"
+#include "gauss_filter.h"
 
 MyGLWidget::MyGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -223,6 +225,14 @@ void MyGLWidget::initializeGL()
 
     this->m_rect = new Model{};
     this->m_rect->initGL(position, 4, indices, 6, ":/shader/vert/rect.vert", ":/shader/frag/rect.frag");
+
+    this->m_gaussComputeShader = new QOpenGLShaderProgram{};
+    this->m_gaussComputeShader->addShaderFromSourceFile(QOpenGLShader::Compute, ":/shader/compute/compute_gauss.glsl");
+    Q_ASSERT(this->m_gaussComputeShader->link());
+
+    this->m_colorComputeShader = new QOpenGLShaderProgram{};
+    this->m_colorComputeShader->addShaderFromSourceFile(QOpenGLShader::Compute, ":/shader/compute/compute_filter.glsl");
+    Q_ASSERT(this->m_colorComputeShader->link());
 }
 
 void MyGLWidget::resizeGL(int w, int h)
@@ -384,6 +394,47 @@ void MyGLWidget::paintGL()
     this->m_gimbal->drawElements(innerGimbalProps, mat, scene);
     this->m_sphere->drawElements(sphereProps, mat, scene);
 
+    if (this->m_gaussFilter) {
+        this->m_gaussComputeShader->bind();
+        std::vector<double> gauss = generate1DGauss(this->m_gaussStrength);
+        for(int i = 0; i < (int)gauss.size(); i += 1) {
+            this->m_gaussComputeShader->setUniformValue(i, (float) gauss[i]);
+        }
+        for(int i = gauss.size(); i < 15; i += 1) {
+            this->m_gaussComputeShader->setUniformValue(i, 1.0f);
+        }
+        this->m_gaussComputeShader->setUniformValue("uNumber", this->m_gaussStrength);
+
+        glGenTextures(1, &this->m_tex);
+        glBindTexture(GL_TEXTURE_2D, this->m_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width(), height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
+
+        this->m_gaussComputeShader->setUniformValue("uHorizontal", true);
+        glCopyImageSubData(this->m_colorTex, GL_TEXTURE_2D, 0, 0, 0, 0, this->m_tex, GL_TEXTURE_2D, 0, 0, 0, 0, width(), height(), 1);
+        glBindImageTexture(0, this->m_colorTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
+        glBindImageTexture(1, this->m_tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
+        glDispatchCompute(width(), height(), 1);
+
+        // Caclulate Vertical Gauss with Horizontal Gauss Image
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        this->m_gaussComputeShader->setUniformValue("uHorizontal", false);
+        glCopyImageSubData(this->m_colorTex, GL_TEXTURE_2D, 0, 0, 0, 0, this->m_tex, GL_TEXTURE_2D, 0, 0, 0, 0, width(), height(), 1);
+        glDispatchCompute(width(), height(), 1);
+
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        glDeleteTextures(1, &this->m_tex);
+    }
+
+    if (this->m_colorFilter) {
+        this->m_colorComputeShader->bind();
+        glBindImageTexture(0, this->m_colorTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
+        glDispatchCompute(width(), height(), 1);
+    }
+
     if (this->m_depthData) {
         //this->m_fbo->bindDefault();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, this->defaultFramebufferObject());
@@ -398,9 +449,9 @@ void MyGLWidget::paintGL()
 
     // Read the internal OpenGL Debug Log
     const QList<QOpenGLDebugMessage> messages = this->logger->loggedMessages();
-    for (const QOpenGLDebugMessage &message : messages)
+    /*for (const QOpenGLDebugMessage &message : messages)
         qDebug() << message;
-
+*/
     update();
 }
 
@@ -519,4 +570,22 @@ void MyGLWidget::setDepthData(bool value)
 {
     this->m_depthData = value;
     emit depthDataChanged(value);
+}
+
+void MyGLWidget::setGaussFilter(bool value)
+{
+    this->m_gaussFilter = value;
+    emit gaussFilterChanged(value);
+}
+
+void MyGLWidget::setGaussStrength(int value)
+{
+    this->m_gaussStrength = value;
+    emit gaussStrengthChanged(value);
+}
+
+void MyGLWidget::setColorFilter(bool value)
+{
+    this->m_colorFilter = value;
+    emit colorFilterChanged(value);
 }

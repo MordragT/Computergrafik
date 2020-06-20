@@ -53,6 +53,9 @@ public slots:
     void setSpecular(double value);
     void setShininess(float value);
     void setDepthData(bool value);
+    void setGaussFilter(bool value);
+    void setGaussStrength(int value);
+    void setColorFilter(bool value);
 
 signals:
     void shininessChanged(float value);
@@ -73,9 +76,15 @@ signals:
     void farOVFL(double value);
     void nearOVFL(double value);
     void depthDataChanged(bool value);
+    void gaussFilterChanged(bool value);
+    void gaussStrengthChanged(int value);
+    void colorFilterChanged(bool value);
 
 private:
+    QOpenGLShaderProgram *m_colorComputeShader;
+    QOpenGLShaderProgram *m_gaussComputeShader;
     Model *m_rect;
+    GLuint m_tex = 0;
     GLuint m_colorTex = 0;
     GLuint m_depthTex = 0;
     QOpenGLFramebufferObject *m_fbo;
@@ -104,6 +113,9 @@ private:
     double m_specular = 0.0;
     bool m_animate = false;
     bool m_camera = false;
+    bool m_gaussFilter = false;
+    bool m_colorFilter = false;
+    int m_gaussStrength = 3;
     QVector3D m_cameraPos{0, 0, 0};
     float m_viewAngleVertical = 0.0;
     float m_viewAngleHorizontal = 0.0;

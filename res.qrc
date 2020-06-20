@@ -21,5 +21,7 @@
         <file>tex/base_tex.png</file>
         <file>shader/frag/rect.frag</file>
         <file>shader/vert/rect.vert</file>
+        <file>shader/compute/compute_gauss.glsl</file>
+        <file>shader/compute/compute_filter.glsl</file>
     </qresource>
 </RCC>

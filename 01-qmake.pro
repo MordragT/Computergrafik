@@ -44,6 +44,7 @@ SOURCES += \
 
 HEADERS += \
     common.h \
+    gauss_filter.h \
     mainwindow.h \
     model.h \
     modelloader/modelloader.h \

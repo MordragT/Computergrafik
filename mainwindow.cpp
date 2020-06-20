@@ -161,6 +161,34 @@ MainWindow::MainWindow(QWidget *parent)
                 [=](bool value) {
         ui->openGLWidget->setDepthData(value);
     });
+
+    QObject::connect(
+                ui->cbGaussFilter,
+                &QCheckBox::clicked,
+                this,
+                [=](bool value) {
+        ui->openGLWidget->setGaussFilter(value);
+    });
+
+    QObject::connect(
+                ui->hsGauss,
+                &QSlider::valueChanged,
+                ui->openGLWidget,
+                [=](int value) {
+        if (value % 2 == 0) {
+            value += 1;
+        }
+        ui->openGLWidget->setGaussStrength(value);
+        //qInfo() << value;
+    });
+
+    QObject::connect(
+                ui->cbColorFilter,
+                &QCheckBox::clicked,
+                this,
+                [=](bool value) {
+        ui->openGLWidget->setColorFilter(value);
+    });
 }
 
 MainWindow::~MainWindow()
